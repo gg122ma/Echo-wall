@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>Echo Wall 留声墙</title>
+    <meta name="description" content="Echo Wall 留声墙 — 马来西亚预科生的知识传承平台" />
+    <meta name="robots" content="index, follow" />
+    <meta property="og:title" content="Echo Wall 留声墙" />
+    <meta property="og:description" content="Echo Wall 留声墙 — 马来西亚预科生的知识传承平台" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Echo Wall 留声墙" />
+    <meta name="twitter:description" content="Echo Wall 留声墙 — 马来西亚预科生的知识传承平台" />
+
+    <!-- FIX-9: CSP — 防止 XSS 攻击的第二道防线 -->
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self';
+      script-src 'self' 'unsafe-inline';
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      font-src 'self' https://fonts.gstatic.com;
+      img-src 'self' data: blob: https:;
+      connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.anthropic.com;
+      frame-ancestors 'none';
+    ">
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Cormorant Garamond: ultra-thin elegant editorial italic serif -->
+    <!-- Bricolage Grotesque: bold quirky variable display grotesque -->
+    <!-- Inter: clean body text -->
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script type="module" crossorigin src="/assets/index-1XYtxH4O.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-qJz_Ol7F.css">
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <!-- ✅ Echo Wall 安全修复补丁 — 必须在 bundle 之后加载 -->
+    <script src="/echo-wall-fixes.js"></script>
+  </body>
+</html>
