@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-i18n="profile.title">Profil Saya</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="nav-target"></div>
+
+  <div class="page-wrapper">
+    <div class="container-narrow" style="padding: 2rem 1rem;">
+      <h2 class="text-center mb-4" data-i18n="profile.title">Profil Saya</h2>
+
+      <!-- User Info -->
+      <div class="card text-center" style="margin-bottom: 1.5rem;">
+        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">👤</div>
+        <h3 id="profile-username"></h3>
+        <p class="text-sm text-muted" id="profile-info"></p>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex gap-2 mb-4">
+        <button class="btn btn-primary" id="tab-bookmarks" data-i18n="profile.bookmarks">Simpanan</button>
+      </div>
+
+      <!-- Bookmarks List -->
+      <div id="bookmarks-list">
+        <div class="empty-state" id="no-bookmarks">
+          <div class="empty-state-icon">☆</div>
+          <div class="empty-state-text" data-i18n="profile.no_bookmarks">Tiada simpanan lagi.</div>
+        </div>
+      </div>
+
+      <!-- Logout -->
+      <button class="btn btn-danger btn-block mt-4" id="btn-logout-page" data-i18n="profile.logout">Log Keluar</button>
+    </div>
+  </div>
+
+  <div class="toast-container"></div>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/notes.js"></script>
+  <script src="js/bookmarks.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      App.init();
+
+      if (!Auth.isLoggedIn()) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const session = Auth.getSession();
+      const t = I18n.t.bind(I18n);
+
+      // Show user info
+      document.getElementById('profile-username').textContent = session.username;
+      document.getElementById('profile-info').textContent =
+        `${t('register.' + session.jurusan, session.jurusan)} · ${t('register.' + session.aliran, session.aliran)} · ${session.sesi}`;
+
+      // Load bookmarks
+      const bookmarkedIds = Bookmarks.getByUser(session.id);
+      const allNotes = Notes.getAll();
+      const bookmarkedNotes = allNotes.filter(n => bookmarkedIds.includes(n.id));
+
+      const listContainer = document.getElementById('bookmarks-list');
+      const emptyState = document.getElementById('no-bookmarks');
+
+      if (bookmarkedNotes.length === 0) {
+        emptyState.classList.remove('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+        bookmarkedNotes.forEach(note => {
+          const card = document.createElement('div');
+          card.className = 'card mb-3';
+          card.style.cursor = 'pointer';
+          card.innerHTML = `
+            <div class="flex justify-between items-center">
+              <div>
+                <span class="note-category-badge cat-${note.kategori}">${note.kategori}</span>
+                <span class="text-sm" style="margin-left: 0.5rem;">${escapeHtml(note.konten.slice(0, 80))}...</span>
+              </div>
+              <button class="btn btn-sm btn-danger bookmark-remove" data-note-id="${note.id}">✕</button>
+            </div>
+          `;
+          listContainer.insertBefore(card, emptyState);
+        });
+
+        // Remove bookmark buttons
+        document.querySelectorAll('.bookmark-remove').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            Bookmarks.toggle(btn.dataset.noteId, session.id);
+            location.reload();
+          });
+        });
+      }
+
+      // Logout
+      document.getElementById('btn-logout-page').addEventListener('click', () => {
+        Auth.logout();
+        window.location.href = 'login.html';
+      });
+    });
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>

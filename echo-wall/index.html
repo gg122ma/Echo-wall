@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-i18n="nav.logo">Echo Wall</title>
+  <link rel="icon" type="image/svg+xml" href="public/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="nav-target"></div>
+
+  <div class="page-wrapper">
+    <section class="hero">
+      <div class="container">
+        <h1 class="hero-title gradient-text" data-i18n="home.hero_title">Echo Wall</h1>
+        <p class="hero-subtitle" data-i18n="home.hero_subtitle">
+          A digital corkboard where Malaysian matriculation students share tips, experiences, and encouragement.
+        </p>
+        <div class="flex gap-3 justify-center mt-4">
+          <a href="register.html" class="btn btn-primary btn-lg" data-i18n="home.cta_start">Start Sharing</a>
+          <a href="explore.html" class="btn btn-secondary btn-lg" data-i18n="home.cta_explore">Explore Walls</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="container" style="padding: 2rem 1rem;">
+      <div class="flex justify-between items-center" style="gap: 1rem; flex-wrap: wrap;" id="stats-row">
+        <div class="text-center" style="flex: 1; min-width: 120px;">
+          <div class="text-3xl font-bold gradient-text" id="stat-users">0</div>
+          <div class="text-sm text-muted" data-i18n="home.stats_users">Active Users</div>
+        </div>
+        <div class="text-center" style="flex: 1; min-width: 120px;">
+          <div class="text-3xl font-bold gradient-text" id="stat-notes">0</div>
+          <div class="text-sm text-muted" data-i18n="home.stats_notes">Notes Shared</div>
+        </div>
+        <div class="text-center" style="flex: 1; min-width: 120px;">
+          <div class="text-3xl font-bold gradient-text" id="stat-votes">0</div>
+          <div class="text-sm text-muted" data-i18n="home.stats_votes">Votes Cast</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Hot Notes Preview -->
+    <section class="container" style="padding: 2rem 1rem;">
+      <h2 class="text-center mb-4" data-i18n="home.hot_notes">Hot Notes This Week</h2>
+      <div class="notes-grid" id="hot-notes-grid">
+        <!-- Populated by JS -->
+      </div>
+      <div class="empty-state" id="no-hot-notes">
+        <div class="empty-state-icon">📌</div>
+        <div class="empty-state-text" data-i18n="wall.no_notes">No notes yet. Be the first to share!</div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>Echo Wall &copy; 2026 — KaSKuM 2026 InnoSTEM Competition Entry</p>
+    </footer>
+  </div>
+
+  <div class="toast-container"></div>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/notes.js"></script>
+  <script src="js/votes.js"></script>
+  <script src="js/bookmarks.js"></script>
+  <script src="js/comments.js"></script>
+  <script src="js/feedback.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    // Load hot notes on home page
+    document.addEventListener('DOMContentLoaded', () => {
+      // Init shared UI
+      App.init();
+
+      // Update stats
+      const notes = Notes.getAll().filter(n => !n.isHidden);
+      const users = Auth.getUsers();
+      const votes = Votes.getAll();
+
+      document.getElementById('stat-users').textContent = users.length;
+      document.getElementById('stat-notes').textContent = notes.length;
+      document.getElementById('stat-votes').textContent = votes.length;
+
+      // Show hot notes (sorted by vote count)
+      const hot = Notes.sortBy(notes, 'hot').slice(0, 6);
+      const grid = document.getElementById('hot-notes-grid');
+      const empty = document.getElementById('no-hot-notes');
+
+      if (hot.length === 0) {
+        grid.classList.add('hidden');
+        empty.classList.remove('hidden');
+      } else {
+        grid.classList.remove('hidden');
+        empty.classList.add('hidden');
+        hot.forEach(note => {
+          grid.appendChild(createNoteCard(note));
+        });
+      }
+
+      // Re-apply i18n after dynamic content
+      setTimeout(() => I18n.apply(), 100);
+    });
+
+    /** Create a note card element */
+    function createNoteCard(note) {
+      const t = I18n.t.bind(I18n);
+      const card = document.createElement('div');
+      card.className = 'note-card note-fly-in';
+      card.style.setProperty('--rotation', note.rotation + 'deg');
+      card.style.transform = `rotate(${note.rotation}deg)`;
+      card.style.left = note.posX + '%';
+      card.style.top = note.posY + '%';
+
+      const author = note.isAnonymous
+        ? (note.namaSamaran || t('wall.anonymous_name'))
+        : note.userId || '?';
+
+      const timeAgo = getTimeAgo(note.createdAt);
+      const catClass = 'cat-' + note.kategori;
+      const catLabel = t('wall.categories.' + note.kategori, note.kategori);
+
+      const isBookmarked = Auth.isLoggedIn()
+        && Bookmarks.isBookmarked(note.id, Auth.getSession().id);
+
+      card.innerHTML = `
+        <div class="note-pin"></div>
+        <div class="note-content">${escapeHtml(note.konten)}</div>
+        <div class="note-meta">
+          <div class="flex gap-1 items-center">
+            <span class="note-category-badge ${catClass}">${catLabel}</span>
+            <span class="text-xs text-muted">${author}</span>
+          </div>
+          <div class="flex gap-1 items-center">
+            <span class="note-votes">▲${note.upvotes} ▼${note.downvotes}</span>
+            <button class="note-bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" data-note-id="${note.id}" title="${t('note_detail.bookmark')}">
+              ${isBookmarked ? '★' : '☆'}
+            </button>
+          </div>
+        </div>
+        <div class="text-xs text-muted" style="margin-top:4px;text-align:right;">${timeAgo}</div>
+      `;
+
+      // Bookmark handler
+      const bmBtn = card.querySelector('.note-bookmark-btn');
+      bmBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (!Auth.isLoggedIn()) {
+          App.showToast(t('common.error', 'Please login first.'));
+          return;
+        }
+        const nowBookmarked = Bookmarks.toggle(note.id, Auth.getSession().id);
+        bmBtn.textContent = nowBookmarked ? '★' : '☆';
+        bmBtn.classList.toggle('bookmarked', nowBookmarked);
+      });
+
+      return card;
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function getTimeAgo(dateStr) {
+      const diff = Date.now() - new Date(dateStr).getTime();
+      const hours = Math.floor(diff / 3600000);
+      const days = Math.floor(hours / 24);
+      if (days > 0) return days + 'd';
+      if (hours > 0) return hours + 'h';
+      return '<1h';
+    }
+  </script>
+</body>
+</html>

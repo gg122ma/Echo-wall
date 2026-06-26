@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-i18n="nav.wall">Dinding</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/wall.css">
+</head>
+<body>
+  <div id="nav-target"></div>
+
+  <div class="page-wrapper">
+    <div class="cork-board" id="cork-board">
+      <!-- Wall Header -->
+      <div class="wall-header">
+        <h1 id="wall-title" class="gradient-text"></h1>
+        <div class="wall-meta" id="wall-meta"></div>
+      </div>
+
+      <!-- Filter Bar -->
+      <div class="filter-bar" id="filter-bar">
+        <select id="filter-kategori">
+          <option value="">Semua Kategori</option>
+          <option value="akademik">Akademik</option>
+          <option value="kokurikulum">Kokurikulum</option>
+          <option value="kampus">Kampus</option>
+          <option value="emosi">Emosi</option>
+        </select>
+        <select id="filter-sort">
+          <option value="hot" data-i18n="wall.sort_by_hot">Popular</option>
+          <option value="new" data-i18n="wall.sort_new">Terbaru</option>
+        </select>
+      </div>
+
+      <!-- Notes Grid -->
+      <div class="notes-grid" id="notes-grid"></div>
+
+      <!-- Empty State -->
+      <div class="empty-state" id="no-notes">
+        <div class="empty-state-icon">📌</div>
+        <div class="empty-state-text" data-i18n="wall.no_notes">Tiada nota lagi. Jadi yang pertama berkongsi!</div>
+      </div>
+    </div>
+
+    <!-- FAB: Add Note -->
+    <button class="fab" id="fab-add" title="Add Note">+</button>
+  </div>
+
+  <!-- Add Note Modal -->
+  <div class="modal-overlay" id="modal-add-note">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 data-i18n="wall.add_note">Tambah Nota</h3>
+        <button class="modal-close" onclick="App.closeModal('modal-add-note')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" data-i18n="wall.categories.akademik">Kategori</label>
+          <select class="form-select" id="note-kategori">
+            <option value="akademik">Akademik</option>
+            <option value="kokurikulum">Kokurikulum</option>
+            <option value="kampus">Kehidupan Kampus</option>
+            <option value="emosi">Sokongan Emosi</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" data-i18n="wall.placeholder">Kongsikan pengalaman anda...</label>
+          <textarea class="form-textarea" id="note-konten" rows="4" maxlength="500"
+                    data-i18n-placeholder="wall.placeholder"
+                    placeholder="Kongsikan pengalaman anda..."></textarea>
+          <div class="form-hint"><span id="char-count">0</span>/500</div>
+        </div>
+        <div class="form-group">
+          <div class="checkbox-group">
+            <input type="checkbox" id="note-anonim">
+            <label for="note-anonim" data-i18n="wall.anonymous">Siarkan secara anonim</label>
+          </div>
+        </div>
+        <div class="form-group" id="anon-name-group" style="display:none;">
+          <label class="form-label">Nama Samaran (pilihan)</label>
+          <input type="text" class="form-input" id="note-nama-samaran" placeholder="Contoh: Si Cendekiawan">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="App.closeModal('modal-add-note')" data-i18n="common.cancel">Batal</button>
+        <button class="btn btn-primary" id="btn-submit-note" data-i18n="wall.add_note">Tambah Nota</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Note Detail Modal -->
+  <div class="modal-overlay" id="modal-note-detail">
+    <div class="modal" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3 data-i18n="note_detail.title">Butiran Nota</h3>
+        <button class="modal-close" onclick="App.closeModal('modal-note-detail')">&times;</button>
+      </div>
+      <div class="modal-body" id="note-detail-body">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container"></div>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/notes.js"></script>
+  <script src="js/votes.js"></script>
+  <script src="js/bookmarks.js"></script>
+  <script src="js/comments.js"></script>
+  <script src="js/app.js"></script>
+  <script src="wall-render.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      App.init();
+      renderWall();
+    });
+  </script>
+</body>
+</html>

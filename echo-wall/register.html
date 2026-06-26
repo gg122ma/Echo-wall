@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-i18n="auth.register_title">Daftar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="nav-target"></div>
+
+  <div class="page-wrapper">
+    <div class="container-narrow" style="padding-top: 2rem; padding-bottom: 2rem;">
+      <div class="card" style="max-width: 480px; margin: 0 auto;">
+        <h2 class="text-center mb-4" data-i18n="auth.register_title">Daftar Akaun</h2>
+
+        <form id="register-form">
+          <div class="form-group">
+            <label class="form-label" data-i18n="auth.register_username">Nama Pengguna</label>
+            <input type="text" class="form-input" id="reg-username" required minlength="3" maxlength="20">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" data-i18n="auth.register_password">Kata Laluan</label>
+            <input type="password" class="form-input" id="reg-password" required minlength="6">
+            <div class="form-hint" data-i18n="auth.password_hint">Sekurang-kurangnya 6 aksara</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" data-i18n="register.jurusan">Jurusan</label>
+            <select class="form-select" id="reg-jurusan" required>
+              <option value="" data-i18n="register.select_jurusan">-- Pilih Jurusan --</option>
+              <option value="sains" data-i18n="register.sains">Sains</option>
+              <option value="sains-komputer" data-i18n="register.sains_komputer">Sains Komputer</option>
+              <option value="kejuruteraan" data-i18n="register.kejuruteraan">Kejuruteraan</option>
+              <option value="perakaunan" data-i18n="register.perakaunan">Perakaunan</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" data-i18n="register.aliran">Aliran</label>
+            <select class="form-select" id="reg-aliran" required disabled>
+              <option value="">-- Pilih Jurusan dulu --</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" data-i18n="register.sesi">Sesi</label>
+            <select class="form-select" id="reg-sesi" required>
+              <option value="" data-i18n="register.select_sesi">-- Pilih Sesi --</option>
+              <option value="2024-2025" data-i18n="register.2024_2025">2024/2025</option>
+              <option value="2025-2026" data-i18n="register.2025_2026">2025/2026</option>
+              <option value="2026-2027" data-i18n="register.2026_2027">2026/2027</option>
+            </select>
+          </div>
+
+          <div id="reg-error" class="text-sm" style="color: var(--danger); margin-bottom: 0.75rem;" class="hidden"></div>
+
+          <button type="submit" class="btn btn-primary btn-block btn-lg" data-i18n="auth.register_submit">Daftar</button>
+        </form>
+
+        <p class="text-center text-sm mt-4 text-muted">
+          <span data-i18n="auth.register_has_account">Sudah ada akaun?</span>
+          <a href="login.html" data-i18n="auth.login_title">Log masuk</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container"></div>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    // Jurusan → Aliran mapping
+    const JURUSAN_ALIRAN = {
+      'sains': [
+        { value: 'sains-hayat', label: 'Sains Hayat' },
+        { value: 'sains-fizikal', label: 'Sains Fizikal' },
+        { value: 'sains-teknologi', label: 'Sains Teknologi' }
+      ],
+      'sains-komputer': [
+        { value: 'sains-komputer', label: 'Sains Komputer' }
+      ],
+      'kejuruteraan': [
+        { value: 'asas-kejuruteraan', label: 'Asas Kejuruteraan' },
+        { value: 'kejuruteraan-awam', label: 'Kejuruteraan Awam' },
+        { value: 'kejuruteraan-elektrik', label: 'Kejuruteraan Elektrik & Elektronik' },
+        { value: 'kejuruteraan-mekanikal', label: 'Kejuruteraan Mekanikal' }
+      ],
+      'perakaunan': [
+        { value: 'perakaunan', label: 'Perakaunan' },
+        { value: 'perakaunan-profesional', label: 'Perakaunan Profesional (JPPro)' }
+      ]
+    };
+
+    // Dynamic aliran dropdown
+    const jurusanSelect = document.getElementById('reg-jurusan');
+    const aliranSelect = document.getElementById('reg-aliran');
+
+    jurusanSelect.addEventListener('change', () => {
+      const jurusan = jurusanSelect.value;
+      aliranSelect.innerHTML = '<option value="">-- Pilih Aliran --</option>';
+
+      if (jurusan && JURUSAN_ALIRAN[jurusan]) {
+        aliranSelect.disabled = false;
+        JURUSAN_ALIRAN[jurusan].forEach(a => {
+          const opt = document.createElement('option');
+          opt.value = a.value;
+          opt.textContent = a.label;
+          aliranSelect.appendChild(opt);
+        });
+      } else {
+        aliranSelect.disabled = true;
+      }
+    });
+
+    // Form submit
+    document.addEventListener('DOMContentLoaded', () => {
+      App.init();
+
+      if (Auth.isLoggedIn()) {
+        const s = Auth.getSession();
+        window.location.href = `wall.html?jurusan=${s.jurusan}&aliran=${s.aliran}&sesi=${s.sesi}`;
+      }
+
+      document.getElementById('register-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const username = document.getElementById('reg-username').value.trim();
+        const password = document.getElementById('reg-password').value;
+        const jurusan = document.getElementById('reg-jurusan').value;
+        const aliran = document.getElementById('reg-aliran').value;
+        const sesi = document.getElementById('reg-sesi').value;
+        const errorEl = document.getElementById('reg-error');
+
+        const result = Auth.register(username, password, jurusan, aliran, sesi);
+
+        if (result.success) {
+          window.location.href = `wall.html?jurusan=${jurusan}&aliran=${aliran}&sesi=${sesi}`;
+        } else {
+          errorEl.textContent = result.error;
+          errorEl.classList.remove('hidden');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

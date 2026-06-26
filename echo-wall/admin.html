@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title data-i18n="admin.title">Papan Pemuka Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="nav-target"></div>
+
+  <div class="page-wrapper">
+    <div class="container" style="padding: 2rem 1rem;">
+      <h2 class="text-center mb-4" data-i18n="admin.title">Papan Pemuka Admin</h2>
+
+      <!-- Stats Cards -->
+      <div class="flex gap-3" style="flex-wrap: wrap; margin-bottom: 2rem;">
+        <div class="card text-center" style="flex: 1; min-width: 150px;">
+          <div class="text-3xl font-bold gradient-text" id="admin-total-notes">0</div>
+          <div class="text-sm text-muted" data-i18n="admin.total_notes">Jumlah Nota</div>
+        </div>
+        <div class="card text-center" style="flex: 1; min-width: 150px;">
+          <div class="text-3xl font-bold gradient-text" id="admin-total-users">0</div>
+          <div class="text-sm text-muted" data-i18n="admin.total_users">Jumlah Pengguna</div>
+        </div>
+        <div class="card text-center" style="flex: 1; min-width: 150px;">
+          <div class="text-3xl font-bold gradient-text" id="admin-total-votes">0</div>
+          <div class="text-sm text-muted" data-i18n="admin.total_votes">Jumlah Undian</div>
+        </div>
+      </div>
+
+      <!-- Notes Management Table -->
+      <h3 class="mb-3" data-i18n="admin.recent_notes">Nota Terkini</h3>
+      <div class="card" style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+          <thead>
+            <tr style="border-bottom: 2px solid var(--border); text-align: left;">
+              <th style="padding: 0.5rem;">Kandungan</th>
+              <th style="padding: 0.5rem;">Kategori</th>
+              <th style="padding: 0.5rem;">Undi</th>
+              <th style="padding: 0.5rem;">Tarikh</th>
+              <th style="padding: 0.5rem;">Tindakan</th>
+            </tr>
+          </thead>
+          <tbody id="admin-table-body">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+        <div class="empty-state" id="admin-empty" style="display: none;">
+          <div class="empty-state-text" data-i18n="admin.no_notes">Tiada nota untuk diurus.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container"></div>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/notes.js"></script>
+  <script src="js/votes.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      App.init();
+
+      // Guard: only admin can access
+      if (!Auth.isLoggedIn() || !Auth.isAdmin()) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      const t = I18n.t.bind(I18n);
+
+      // Stats
+      const notes = Notes.getAll().filter(n => !n.isHidden);
+      document.getElementById('admin-total-notes').textContent = notes.length;
+      document.getElementById('admin-total-users').textContent = Auth.getUsers().length;
+      document.getElementById('admin-total-votes').textContent = Votes.getAll().length;
+
+      // Table
+      const tbody = document.getElementById('admin-table-body');
+      const empty = document.getElementById('admin-empty');
+
+      const sorted = [...notes].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      if (sorted.length === 0) {
+        empty.style.display = 'block';
+      } else {
+        sorted.forEach(note => {
+          const tr = document.createElement('tr');
+          tr.style.borderBottom = '1px solid var(--border)';
+          tr.innerHTML = `
+            <td style="padding: 0.5rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(note.konten)}">
+              ${escapeHtml(note.konten.slice(0, 60))}${note.konten.length > 60 ? '...' : ''}
+            </td>
+            <td style="padding: 0.5rem;"><span class="note-category-badge cat-${note.kategori}">${note.kategori}</span></td>
+            <td style="padding: 0.5rem;">▲${note.upvotes} ▼${note.downvotes}</td>
+            <td style="padding: 0.5rem; color: var(--fg-muted); font-size: 0.75rem;">${new Date(note.createdAt).toLocaleDateString()}</td>
+            <td style="padding: 0.5rem;">
+              <button class="btn btn-sm btn-secondary admin-hide" data-note-id="${note.id}" style="margin-right: 4px;">${t('admin.hide')}</button>
+              <button class="btn btn-sm btn-danger admin-delete" data-note-id="${note.id}">${t('admin.delete')}</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        // Hide buttons
+        document.querySelectorAll('.admin-hide').forEach(btn => {
+          btn.addEventListener('click', () => {
+            if (confirm(t('admin.confirm_hide'))) {
+              Notes.hide(btn.dataset.noteId);
+              location.reload();
+            }
+          });
+        });
+
+        // Delete buttons
+        document.querySelectorAll('.admin-delete').forEach(btn => {
+          btn.addEventListener('click', () => {
+            if (confirm(t('admin.confirm_delete'))) {
+              Notes.delete(btn.dataset.noteId);
+              location.reload();
+            }
+          });
+        });
+      }
+    });
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>
